@@ -74,6 +74,12 @@ class WebSocketService {
           case 'response_end':
             this.options.onResponseEnd();
             break;
+          case 'video_control':
+            // Handle video control messages from backend
+            if ((window as any).handleVideoCommand) {
+              (window as any).handleVideoCommand(message.command);
+            }
+            break;
           case 'error':
             this.options.onError(message.error || 'Unknown error');
             break;

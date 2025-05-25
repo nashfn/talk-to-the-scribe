@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -194,11 +193,11 @@ const VoiceAssistant = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Status Card */}
-      <Card className="p-6 backdrop-blur-sm bg-white/80 border-0 shadow-xl">
+      <Card className="p-6 backdrop-blur-sm bg-black/60 border-gray-700 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} />
-            <Badge variant="outline" className="font-medium">
+            <Badge variant="outline" className="font-medium bg-gray-800/50 text-gray-200 border-gray-600">
               {getStatusText()}
             </Badge>
           </div>
@@ -207,7 +206,7 @@ const VoiceAssistant = () => {
               variant="outline"
               size="sm"
               onClick={handleDisconnect}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-400 hover:text-red-300 border-gray-600 hover:bg-gray-800"
             >
               Disconnect
             </Button>
@@ -215,17 +214,17 @@ const VoiceAssistant = () => {
         </div>
         
         <div className="text-center">
-          <p className="text-lg font-medium text-gray-700 mb-2">
+          <p className="text-lg font-medium text-gray-200 mb-2">
             {getAssistantStateText()}
           </p>
           {assistantState === "listening" && (
             <div className="flex justify-center">
               <div className="flex space-x-1">
-                <div className="w-2 h-8 bg-blue-500 rounded animate-pulse" />
-                <div className="w-2 h-6 bg-blue-400 rounded animate-pulse delay-75" />
-                <div className="w-2 h-10 bg-blue-500 rounded animate-pulse delay-150" />
-                <div className="w-2 h-4 bg-blue-400 rounded animate-pulse delay-200" />
-                <div className="w-2 h-8 bg-blue-500 rounded animate-pulse delay-300" />
+                <div className="w-2 h-8 bg-red-500 rounded animate-pulse" />
+                <div className="w-2 h-6 bg-red-400 rounded animate-pulse delay-75" />
+                <div className="w-2 h-10 bg-red-500 rounded animate-pulse delay-150" />
+                <div className="w-2 h-4 bg-red-400 rounded animate-pulse delay-200" />
+                <div className="w-2 h-8 bg-red-500 rounded animate-pulse delay-300" />
               </div>
             </div>
           )}
@@ -233,7 +232,7 @@ const VoiceAssistant = () => {
       </Card>
 
       {/* Main Control */}
-      <Card className="p-8 backdrop-blur-sm bg-white/80 border-0 shadow-xl">
+      <Card className="p-8 backdrop-blur-sm bg-black/60 border-gray-700 shadow-2xl">
         <div className="text-center space-y-6">
           <div className="relative inline-block">
             <Button
@@ -244,8 +243,8 @@ const VoiceAssistant = () => {
                 isRecording
                   ? "bg-red-500 hover:bg-red-600 animate-pulse"
                   : connectionStatus === "connected"
-                  ? "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                  : "bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700"
+                  ? "bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-700 hover:to-yellow-700"
+                  : "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800"
               }`}
             >
               {isRecording ? (
@@ -261,11 +260,11 @@ const VoiceAssistant = () => {
           </div>
           
           <div className="space-y-2">
-            <p className="text-lg font-medium">
+            <p className="text-lg font-medium text-gray-200">
               {getMicButtonText()}
             </p>
             {connectionStatus === "disconnected" && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-400">
                 Click to connect to the voice assistant
               </p>
             )}
@@ -273,7 +272,7 @@ const VoiceAssistant = () => {
 
           {/* Audio Status */}
           {isPlaying && (
-            <div className="flex items-center justify-center space-x-2 text-purple-600">
+            <div className="flex items-center justify-center space-x-2 text-yellow-400">
               <Volume2 size={20} />
               <span className="text-sm font-medium">Playing response...</span>
             </div>
@@ -282,11 +281,11 @@ const VoiceAssistant = () => {
       </Card>
 
       {/* Instructions */}
-      <Card className="p-4 backdrop-blur-sm bg-white/60 border-0">
-        <div className="text-center text-sm text-gray-600 space-y-1">
+      <Card className="p-4 backdrop-blur-sm bg-black/40 border-gray-700">
+        <div className="text-center text-sm text-gray-300 space-y-1">
           <p>• Click the microphone to connect and start recording</p>
-          <p>• Speak clearly and wait for the assistant's response</p>
-          <p>• The assistant will respond with audio automatically</p>
+          <p>• Control the video player with voice commands</p>
+          <p>• Say "play", "pause", "volume up/down", or "load video [URL]"</p>
         </div>
       </Card>
     </div>
