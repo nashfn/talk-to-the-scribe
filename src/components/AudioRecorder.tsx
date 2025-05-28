@@ -36,7 +36,7 @@ class AudioRecorder {
       this.audioChunks = [];
 
       this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data.size > 0) {      
           this.audioChunks.push(event.data);
         }
       };

@@ -2,14 +2,24 @@
 const express = require('express');
 const WebSocket = require('ws');
 const cors = require('cors');
+const path = require('path')
 require('dotenv').config();
+
 
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Serve static files from the Vite dist directory
+app.use(express.static(path.join(__dirname, '../dist')));
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Handle SPA routing (e.g., React Router or Vue Router in history mode)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 // Create HTTP server
 const server = require('http').createServer(app);
@@ -17,7 +27,7 @@ const server = require('http').createServer(app);
 // Create WebSocket server
 const wss = new WebSocket.Server({ 
   server,
-  path: '/ws'
+  path: '/ws_recall'
 });
 
 // Store active connections
@@ -33,8 +43,10 @@ wss.on('connection', (ws, req) => {
   connections.set(connectionId, { ws, openAIHandler });
 
   ws.on('message', async (message) => {
+    console.log(`Got message ${message.byteLength}`)
     try {
       if (message instanceof Buffer) {
+        console.log(`Sending audio ${message.byteLength}`)
         // Binary audio data - forward to OpenAI
         await openAIHandler.sendAudio(message);
       } else {
@@ -67,6 +79,11 @@ wss.on('connection', (ws, req) => {
   ws.send(JSON.stringify({ type: 'connected' }));
 });
 
+const MODEL = 'gpt-4o-realtime-preview';
+const API_VERSION = '2025-04-01-preview';
+const OLD_URL = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
+const FULL_URL = `wss://api.openai.com/v1/realtime?model=${MODEL}&api-version=${API_VERSION}`;
+
 // OpenAI Realtime API Handler
 class OpenAIRealtimeHandler {
   constructor(clientWs) {
@@ -85,7 +102,7 @@ class OpenAIRealtimeHandler {
 
     try {
       const WebSocket = require('ws');
-      this.openAIWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', {
+      this.openAIWs = new WebSocket(FULL_URL, {
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'OpenAI-Beta': 'realtime=v1'
@@ -154,13 +171,19 @@ class OpenAIRealtimeHandler {
   }
 
   handleOpenAIMessage(message) {
+    console.log(`received oai message ${JSON.stringify(message)}`)
     switch (message.type) {
       case 'response.audio.delta':
         // Stream audio back to client
         if (message.delta) {
           const audioBuffer = Buffer.from(message.delta, 'base64');
           this.clientWs.send(audioBuffer);
+          console.log(`sent msg ${audioBuffer.byteLength}`)
         }
+        break;
+
+      case 'response.audio.done':
+        this.clientWs.send(JSON.stringify({ type: 'response_audio_done' }));
         break;
 
       case 'response.done':
@@ -169,6 +192,10 @@ class OpenAIRealtimeHandler {
 
       case 'response.created':
         this.clientWs.send(JSON.stringify({ type: 'response_start' }));
+        break;
+
+      case 'response.audio_transcript.done':
+        this.clientWs.send(JSON.stringify({ type: 'response_audio_transcript_done', transciprt: message.transciprt }));
         break;
 
       case 'response.text.delta':
@@ -198,6 +225,7 @@ class OpenAIRealtimeHandler {
   }
 
   processTextForVideoCommands(text) {
+    console.log(`processing text commandss ${text}`)
     const lowerText = text.toLowerCase();
     
     // Video control commands
@@ -247,6 +275,7 @@ class OpenAIRealtimeHandler {
       type: 'input_audio_buffer.append',
       audio: base64Audio
     }));
+    console.log(`sent audio to oai ${base64Audio.byteLength}`)
   }
 
   async handleMessage(data) {
@@ -290,8 +319,8 @@ app.post('/video-control', (req, res) => {
 
 // Start server
 server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`WebSocket endpoint: ws://localhost:${port}/ws`);
+  console.log(`Server running on http://localhost:${port}/`);
+  console.log(`WebSocket endpoint: ws://localhost:${port}/ws_recall`);
   
   if (!process.env.OPENAI_API_KEY) {
     console.warn('⚠️  OPENAI_API_KEY not found in environment variables');

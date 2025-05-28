@@ -4,6 +4,7 @@ interface WebSocketServiceOptions {
   onDisconnect: () => void;
   onError: (error: string) => void;
   onAudioReceived: (audioData: ArrayBuffer) => void;
+  onAudioDone: () => void;
   onResponseStart: () => void;
   onResponseEnd: () => void;
 }
@@ -14,20 +15,26 @@ class WebSocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
   private reconnectDelay = 1000;
+  private url: string = "";
 
-  constructor(options: WebSocketServiceOptions) {
+  constructor(options: WebSocketServiceOptions, url: string) {
     this.options = options;
+    this.url = url;
   }
 
   connect(): void {
     try {
       // Connect to your Express.js backend WebSocket server
       // Replace with your actual backend URL
-      const wsUrl = process.env.NODE_ENV === 'production' 
-        ? 'wss://your-backend-url.com/ws' 
+      var wsUrl = process.env.NODE_ENV === 'production' 
+        ? 'wss://your-backend-url=.com/ws' 
         : 'ws://localhost:3001/ws';
+
+      wsUrl = this.url;
+      wsUrl = 'ws://localhost:3001/ws_recall';
       
       this.ws = new WebSocket(wsUrl);
+      this.ws.binaryType = 'arraybuffer';
 
       this.ws.onopen = () => {
         console.log('WebSocket connected');
@@ -59,12 +66,15 @@ class WebSocketService {
   }
 
   private handleMessage(event: MessageEvent): void {
+    console.log(`recvd msg ${JSON.stringify(event)}`)
     try {
       if (event.data instanceof ArrayBuffer) {
         // Binary audio data
+        console.log("audio data received.")
         this.options.onAudioReceived(event.data);
       } else if (typeof event.data === 'string') {
         // JSON messages
+        console.log("json data received.")
         const message = JSON.parse(event.data);
         
         switch (message.type) {
@@ -80,6 +90,13 @@ class WebSocketService {
               (window as any).handleVideoCommand(message.command);
             }
             break;
+          case 'response_audio_transcript_done':
+            console.log("Response audio transcript done ", message.transcript)
+            break;
+          case 'response_audio_done':
+            console.log("Audio response done.")
+            this.options.onAudioDone();
+            break;
           case 'error':
             this.options.onError(message.error || 'Unknown error');
             break;
@@ -93,7 +110,9 @@ class WebSocketService {
   }
 
   sendAudio(audioData: ArrayBuffer): void {
+    console.log(`sendAudio()`)
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log(`audio chunk push ${audioData.byteLength}`)
       this.ws.send(audioData);
     }
   }

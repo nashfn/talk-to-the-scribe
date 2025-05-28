@@ -78,3 +78,9 @@ The assistant can understand and execute these voice commands:
 - `response_end` - AI finished responding  
 - `video_control` - Video player commands
 - `error` - Error messages
+
+
+
+## References:
+ - OpenAI Beta API: https://github.com/openai/openai-realtime-api-beta/blob/main/lib/client.js
+ 
